@@ -1,4 +1,4 @@
-# taeho_repository
+# taeho_repository ![HitCount](http://hits.dwyl.com/KHU-Face-ID/taeho_repository.svg)
 
 ## 1. image_capture
 카메라에 얼굴이 n프레임이상 인식되면 n프레임마다 캡쳐하여 저장한다.(이미지가 저장될때 확인용 글씨는 저장되지 않는다.)
