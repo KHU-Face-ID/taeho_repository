@@ -30,6 +30,9 @@ detect_model.load_state_dict(torch.load(
     'Weights/MobileFace_Net', map_location=lambda storage, loc: storage))
 detect_model.eval()
 target, name = load_facebank(path='facebank')
+parser = argparse.ArgumentParser()
+parser.add_argument('--miniface', required=True, type=int)
+args = parser.parse_args()
 
 
 def URL2Frame(URL):
@@ -55,7 +58,7 @@ def resize_image(img, scale):
 def MTCNN_NET(frame, scale, device, p_model_path, r_model_path, o_model_path):
     input = resize_image(frame, scale)
     bboxes, landmarks = create_mtcnn_net(
-        input, 20, device, p_model_path, r_model_path, o_model_path)
+        input, args.miniface, device, p_model_path, r_model_path, o_model_path)
 
     if bboxes != []:
         bboxes = bboxes / scale

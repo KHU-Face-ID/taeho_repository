@@ -3,9 +3,8 @@ import json
 import argparse
 
 HOST_NAME = 'localhost'
-PORT = 5000
-REQUEST_URL = 'http://' + HOST_NAME + ':' + str(PORT) + '/modelfr'
-REQUEST_URL_2 = 'http://' + HOST_NAME + ':' + str(PORT) + '/modelat'
+REQUEST_URL = 'http://' + HOST_NAME + ':1219/modelfr'
+REQUEST_URL_2 = 'http://' + HOST_NAME + ':1121/modelat'
 
 
 def send_image_request(image_path):
@@ -13,8 +12,8 @@ def send_image_request(image_path):
 
     # res = requests.post(REQUEST_URL, data={'ip': URL}).json()
     # return print(res)
-    requests.post(
-        REQUEST_URL, data={'ip': URL})
+    # requests.post(
+    #     REQUEST_URL, data={'ip': URL})
     requests.post(
         REQUEST_URL_2, data={'ip': URL})
     return -1

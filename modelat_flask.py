@@ -69,7 +69,7 @@ def resize_image(img, scale):
 
 def MTCNN_NET(frame, device, p_model_path, r_model_path, o_model_path):
     bboxes, landmarks = create_mtcnn_net(
-        frame, 20, device, p_model_path, r_model_path, o_model_path)
+        frame, 10, device, p_model_path, r_model_path, o_model_path)
 
     return bboxes, landmarks
 
@@ -171,4 +171,4 @@ api.add_resource(HTTPRequest, '/modelat')
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=1121)()
