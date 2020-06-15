@@ -31,7 +31,8 @@ detect_model.load_state_dict(torch.load(
 detect_model.eval()
 target, name = load_facebank(path='facebank')
 parser = argparse.ArgumentParser()
-parser.add_argument('--miniface', required=True, type=int)
+parser.add_argument('--miniface', default=10, type=int)
+parser.add_argument('--scale', default=2, type=int)
 args = parser.parse_args()
 
 
@@ -84,7 +85,7 @@ def Seperate_frame(frame):
     width = img.shape[1]
     for H_1, H_2 in [(0, int(height*0.4)), (int(height*0.3), int(height*0.7)), (int(height*0.6), height)]:
         for W_1, W_2 in [(0, int(width*0.3)), (int(width*0.2), int(width*0.5)), (int(width*0.4), int(width*0.7)), (int(width*0.6), width)]:
-            cam.append(size_up(img[H_1:H_2, W_1:W_2], 2))
+            cam.append(size_up(img[H_1:H_2, W_1:W_2], args.scale))
     return cam
 
 
