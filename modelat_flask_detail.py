@@ -33,7 +33,15 @@ target, name = load_facebank(path='facebank')
 parser = argparse.ArgumentParser()
 parser.add_argument('--miniface', default=10, type=int)
 parser.add_argument('--scale', default=2, type=int)
+parser.add_argument('--update', default=False, type=bool)
 args = parser.parse_args()
+if args.update:
+    targets, names = prepare_facebank(
+        detect_model, path='facebank')
+    print('facebank updated')
+else:
+    targets, names = load_facebank(path='facebank')
+    print('facebank loaded')
 
 
 def mod_crop(image, scale=2):
@@ -145,16 +153,20 @@ manager.add_command('runserver', CustomServer(host='0.0.0.0'))
 
 
 class HTTPRequest(Resource):
-    def post(self):
-        URL_fr = request.form['ip']
-        while True:
-            try:
-                student_list = get_bbox(URL_fr, device_0, target, name)
-                print(student_list)
+    # def post(self):
+    #     URL_fr = request.form['ip']
+    #     while True:
+    #         try:
+    #             student_list = get_bbox(URL_fr, device_0, target, name)
+    #             print(student_list)
 
-            except:
-                return jsonify({})
+    #         except:
+    #             return jsonify({})
 
+    def get(self):
+        URL_fr = request.args.get('ip', '')
+        student_list = get_bbox(URL_fr, device_0, target, name)
+        return {'ip': student_list}
 
 # class HTTPRequest(Resource):
 #     def post(self):

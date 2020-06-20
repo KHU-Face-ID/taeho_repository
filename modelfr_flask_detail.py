@@ -31,8 +31,17 @@ detect_model.load_state_dict(torch.load(
 detect_model.eval()
 target, name = load_facebank(path='facebank')
 parser = argparse.ArgumentParser()
-parser.add_argument('--miniface', required=True, type=int)
+parser.add_argument('--miniface', default=20, type=int)
+parser.add_argument('--update', default=False, type=bool)
 args = parser.parse_args()
+if args.update:
+    targets, names = prepare_facebank(
+        detect_model, path='facebank')
+    print('facebank updated')
+else:
+    targets, names = load_facebank(path='facebank')
+    print('facebank loaded')
+URL_fr = ''
 
 
 def URL2Frame(URL):
@@ -111,6 +120,22 @@ def get_bbox(URL, device, targets=target, names=name):
         return {}
 
 
+# def request_2_ser(URL=URL_fr, device=device_0, targets=target, names=name, ip=args.mainip):
+#     if URL == '':
+#         return -1
+
+#     while True:
+#         try:
+#             student_list = get_bbox(URL, device, targets, names)
+#             print(student_list)
+#             res = requests.post(ip,
+#                                 data=student_list).json()
+#             print(res)
+
+#         except:
+#             return print('Stop')
+
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -124,18 +149,6 @@ manager = Manager(app)
 manager.add_command('runserver', CustomServer(host='0.0.0.0'))
 
 
-class HTTPRequest(Resource):
-    def post(self):
-        URL_fr = request.form['ip']
-        while True:
-            try:
-                student_list = get_bbox(URL_fr, device_0, target, name)
-                print(student_list)
-
-            except:
-                return jsonify({})
-
-
 # class HTTPRequest(Resource):
 #     def post(self):
 #         URL_fr = request.form['ip']
@@ -143,12 +156,22 @@ class HTTPRequest(Resource):
 #             try:
 #                 student_list = get_bbox(URL_fr, device_0, target, name)
 #                 print(student_list)
-#                 res = requests.post('메인 주소',
-#                                     data=student_list).json()
-#                 print(res)
 
 #             except:
 #                 return jsonify({})
+
+
+class HTTPRequest(Resource):
+    # def post(self):
+    #     global URL_fr
+    #     URL_fr = request.form['ip']
+    #     print(URL_fr)
+    #     return 'Start Model'
+
+    def get(self):
+        URL_fr = request.args.get('ip', '')
+        student_list = get_bbox(URL_fr, device_0, target, name)
+        return {'ip': student_list}
 
 
 api.add_resource(HTTPRequest, '/modelfr')

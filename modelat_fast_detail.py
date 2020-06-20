@@ -31,7 +31,7 @@ detect_model.load_state_dict(torch.load(
 detect_model.eval()
 target, name = load_facebank(path='facebank')
 parser = argparse.ArgumentParser()
-parser.add_argument('--miniface', required=True, type=int)
+parser.add_argument('--miniface', default=10, type=int)
 args = parser.parse_args()
 
 
@@ -122,15 +122,19 @@ manager.add_command('runserver', CustomServer(host='0.0.0.0'))
 
 
 class HTTPRequest(Resource):
-    def post(self):
-        URL_fr = request.form['ip']
-        while True:
-            try:
-                student_list = get_bbox(URL_fr, device_0, target, name)
-                print(student_list)
+    # def post(self):
+    #     URL_fr = request.form['ip']
+    #     while True:
+    #         try:
+    #             student_list = get_bbox(URL_fr, device_0, target, name)
+    #             print(student_list)
 
-            except:
-                return jsonify({})
+    #         except:
+    #             return jsonify({})
+    def get(self):
+        URL_fr = request.args.get('ip', '')
+        student_list = get_bbox(URL_fr, device_0, target, name)
+        return {'ip': student_list}
 
 
 # class HTTPRequest(Resource):
