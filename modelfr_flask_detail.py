@@ -77,7 +77,7 @@ def MTCNN_NET(frame, scale, device, p_model_path, r_model_path, o_model_path):
 
 
 def get_bbox(URL, device, targets=target, names=name):
-    student_list = dict()
+    student_list = []
     frame = URL2Frame(URL)
     try:
         bboxes, landmarks = MTCNN_NET(frame, 0.5, device, 'MTCNN/weights/pnet_Weights',
@@ -114,10 +114,10 @@ def get_bbox(URL, device, targets=target, names=name):
                 box['y1'] = b[1]
                 box['x2'] = b[2]
                 box['y2'] = b[3]
-                student_list[i] = box
+                student_list.append(box)
         return student_list
     except:
-        return {}
+        return []
 
 
 # def request_2_ser(URL=URL_fr, device=device_0, targets=target, names=name, ip=args.mainip):
@@ -170,8 +170,9 @@ class HTTPRequest(Resource):
 
     def get(self):
         URL_fr = request.args.get('ip', '')
+        print(URL_fr)
         student_list = get_bbox(URL_fr, device_0, target, name)
-        return {'ip': student_list}
+        return {'box': student_list}
 
 
 api.add_resource(HTTPRequest, '/modelfr')

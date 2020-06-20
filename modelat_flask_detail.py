@@ -166,7 +166,7 @@ class HTTPRequest(Resource):
     def get(self):
         URL_fr = request.args.get('ip', '')
         student_list = get_bbox(URL_fr, device_0, target, name)
-        return {'ip': student_list}
+        return student_list
 
 # class HTTPRequest(Resource):
 #     def post(self):
