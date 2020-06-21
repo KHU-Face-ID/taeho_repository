@@ -22,14 +22,26 @@ import json
 from torchvision import models
 from PIL import Image
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
-# app = Flask(__name__)
 device_0 = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 detect_model = MobileFaceNet(512).to(device_0)
 detect_model.load_state_dict(torch.load(
     'Weights/MobileFace_Net', map_location=lambda storage, loc: storage))
 detect_model.eval()
 target, name = load_facebank(path='facebank')
+parser = argparse.ArgumentParser()
+parser.add_argument('--miniface', default=10, type=int)
+parser.add_argument('--scale', default=2, type=int)
+parser.add_argument('--update', default=False, type=bool)
+args = parser.parse_args()
+if args.update:
+    targets, names = prepare_facebank(
+        detect_model, path='facebank')
+    print('facebank updated')
+else:
+    targets, names = load_facebank(path='facebank')
+    print('facebank loaded')
 
 
 def mod_crop(image, scale=2):
@@ -50,7 +62,7 @@ def URL2Frame(URL):
 
 def size_up(img, size):
     dst = cv2.resize(img, dsize=(0, 0), fx=size, fy=size,
-                     interpolation=cv2.INTER_LINEAR)
+                     interpolation=cv2.INTER_CUBIC)
     return dst
 
 
@@ -69,7 +81,7 @@ def resize_image(img, scale):
 
 def MTCNN_NET(frame, device, p_model_path, r_model_path, o_model_path):
     bboxes, landmarks = create_mtcnn_net(
-        frame, 10, device, p_model_path, r_model_path, o_model_path)
+        frame, args.miniface, device, p_model_path, r_model_path, o_model_path)
 
     return bboxes, landmarks
 
@@ -81,7 +93,7 @@ def Seperate_frame(frame):
     width = img.shape[1]
     for H_1, H_2 in [(0, int(height*0.4)), (int(height*0.3), int(height*0.7)), (int(height*0.6), height)]:
         for W_1, W_2 in [(0, int(width*0.3)), (int(width*0.2), int(width*0.5)), (int(width*0.4), int(width*0.7)), (int(width*0.6), width)]:
-            cam.append(size_up(img[H_1:H_2, W_1:W_2, :], 2))
+            cam.append(size_up(img[H_1:H_2, W_1:W_2], args.scale))
     return cam
 
 
@@ -123,11 +135,11 @@ def get_bbox(URL, device, targets=target, names=name):
         except:
             continue
     temp = list(set(student_list))
-    student_dict = {'id': temp}
-    return student_dict
+    return temp
 
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 
@@ -141,34 +153,15 @@ manager.add_command('runserver', CustomServer(host='0.0.0.0'))
 
 
 class HTTPRequest(Resource):
-    def post(self):
-        URL_fr = request.form['ip']
-        while True:
-            try:
-                student_list = get_bbox(URL_fr, device_0, target, name)
-                print(student_list)
-
-            except:
-                return jsonify({})
-
-
-# class HTTPRequest(Resource):
-#     def post(self):
-#         URL_fr = request.form['ip']
-#         while True:
-#             try:
-#                 student_list = get_bbox(URL_fr, device_0, target, name)
-#                 print(student_list)
-#                 res = requests.post('메인 주소',
-#                                     data=student_list).json()
-#                 print(res)
-
-#             except:
-#                 return jsonify({})
+    def get(self):
+        URL_fr = request.args.get('ip', '')
+        print(URL_fr)
+        student_list = get_bbox(URL_fr, device_0, target, name)
+        return {'id': student_list}
 
 
 api.add_resource(HTTPRequest, '/modelat')
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=1121)()
+    app.run(host='0.0.0.0', port=1121)

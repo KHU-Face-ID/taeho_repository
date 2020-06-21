@@ -22,14 +22,26 @@ import json
 from torchvision import models
 from PIL import Image
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
-# app = Flask(__name__)
 device_0 = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 detect_model = MobileFaceNet(512).to(device_0)
 detect_model.load_state_dict(torch.load(
     'Weights/MobileFace_Net', map_location=lambda storage, loc: storage))
 detect_model.eval()
 target, name = load_facebank(path='facebank')
+parser = argparse.ArgumentParser()
+parser.add_argument('--miniface', default=20, type=int)
+parser.add_argument('--update', default=False, type=bool)
+args = parser.parse_args()
+if args.update:
+    targets, names = prepare_facebank(
+        detect_model, path='facebank')
+    print('facebank updated')
+else:
+    targets, names = load_facebank(path='facebank')
+    print('facebank loaded')
+URL_fr = ''
 
 
 def URL2Frame(URL):
@@ -55,7 +67,7 @@ def resize_image(img, scale):
 def MTCNN_NET(frame, scale, device, p_model_path, r_model_path, o_model_path):
     input = resize_image(frame, scale)
     bboxes, landmarks = create_mtcnn_net(
-        input, 20, device, p_model_path, r_model_path, o_model_path)
+        input, args.miniface, device, p_model_path, r_model_path, o_model_path)
 
     if bboxes != []:
         bboxes = bboxes / scale
@@ -65,7 +77,7 @@ def MTCNN_NET(frame, scale, device, p_model_path, r_model_path, o_model_path):
 
 
 def get_bbox(URL, device, targets=target, names=name):
-    student_list = dict()
+    student_list = []
     frame = URL2Frame(URL)
     try:
         bboxes, landmarks = MTCNN_NET(frame, 0.5, device, 'MTCNN/weights/pnet_Weights',
@@ -102,13 +114,14 @@ def get_bbox(URL, device, targets=target, names=name):
                 box['y1'] = b[1]
                 box['x2'] = b[2]
                 box['y2'] = b[3]
-                student_list[i] = box
+                student_list.append(box)
         return student_list
     except:
-        return {}
+        return []
 
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 
@@ -122,30 +135,12 @@ manager.add_command('runserver', CustomServer(host='0.0.0.0'))
 
 
 class HTTPRequest(Resource):
-    def post(self):
-        URL_fr = request.form['ip']
-        while True:
-            try:
-                student_list = get_bbox(URL_fr, device_0, target, name)
-                print(student_list)
 
-            except:
-                return jsonify({})
-
-
-# class HTTPRequest(Resource):
-#     def post(self):
-#         URL_fr = request.form['ip']
-#         while True:
-#             try:
-#                 student_list = get_bbox(URL_fr, device_0, target, name)
-#                 print(student_list)
-#                 res = requests.post('메인 주소',
-#                                     data=student_list).json()
-#                 print(res)
-
-#             except:
-#                 return jsonify({})
+    def get(self):
+        URL_fr = request.args.get('ip', '')
+        print(URL_fr)
+        student_list = get_bbox(URL_fr, device_0, target, name)
+        return {'box': student_list}
 
 
 api.add_resource(HTTPRequest, '/modelfr')

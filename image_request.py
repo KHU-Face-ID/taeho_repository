@@ -6,13 +6,10 @@ import argparse
 def send_image_request(image_path, ip, model):
     URL = image_path + '/shot.jpg'
     if model == 'at':
-        REQUEST_URL = 'http://' + ip + ':1121/modelat'
+        REQUEST_URL = 'http://' + ip + ':1121/modelat?ip=' + URL
     else:
-        REQUEST_URL = 'http://' + ip + ':1219/modelfr'
-    # result = requests.post(
-    #     REQUEST_URL, data={'ip': URL}).json
-    result = requests.get(
-        REQUEST_URL, params={'ip': URL}).ip
+        REQUEST_URL = 'http://' + ip + ':1219/modelfr?ip=' + URL
+    result = requests.get(REQUEST_URL)
     return result
 
 
